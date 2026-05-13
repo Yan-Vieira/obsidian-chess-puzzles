@@ -1,26 +1,26 @@
 import {Plugin} from 'obsidian';
-import ReviewPuzzlesModal from 'review-puzzles-modal';
+import PuzzlesPanelModal from 'features/decks-panel/DecksPanelModal';
 
 // Remember to rename these classes and interfaces!
 
 export default class ChessPuzzles extends Plugin {
 
-	modal?:ReviewPuzzlesModal
+	puzzlesPanelModal?:PuzzlesPanelModal
 
 	async onload() {
 		
 		this.addCommand({
-			id: "review-puzzles",
-			name: "Review Puzzles",
+			id: "chess-puzzles-select-deck-to-review",
+			name: "select deck to review",
 			callback: () => {
-				this.modal = new ReviewPuzzlesModal(this.app)
-				this.modal.open()
+				this.puzzlesPanelModal = new PuzzlesPanelModal(this.app)
+				this.puzzlesPanelModal.open()
 			}
 		})
 	}
 
 	onunload() {
 
-		this.modal && this.modal.close()
+		this.puzzlesPanelModal?.close()
 	}
 }
