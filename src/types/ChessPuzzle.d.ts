@@ -1,10 +1,10 @@
 declare interface ChessPuzzle {
+    filePath: string
     blockStartLine: number
     blockEndLine: number
 
-    name?: string
     fen?: string
-    answer?: string
+    bestLine?: string[]
 
     lastReview?: string
     nextReview?: string

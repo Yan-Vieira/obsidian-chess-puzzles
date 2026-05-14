@@ -1,6 +1,6 @@
 import { App, getAllTags, TFile } from "obsidian";
 
-export class PuzzlesManager {
+export class PuzzlesService {
 
     app:App
 
@@ -9,7 +9,33 @@ export class PuzzlesManager {
         this.app = app
     }
 
-    public async getDecks() {
+    public async getAllPuzzles() {
+
+        const puzzles:ChessPuzzle[] = []
+
+        const markdownFiles = this.app.vault.getMarkdownFiles()
+
+        for (const file of markdownFiles) {
+
+            const cache = this.app.metadataCache.getFileCache(file)
+
+            if (!cache) continue
+
+            const tags = getAllTags(cache)
+
+            if (!tags || !tags.some(tag => tag === "#chess-puzzles")) continue
+
+           const content = await this.app.vault.read(file)
+           
+           const extracted = this.extractChessPuzzleBlocks(file, content)
+
+           puzzles.push(...extracted)
+        }
+
+        return puzzles
+    }
+
+    public async getAllDecks() {
 
         const decks:PuzzleDeck[] = []
 
@@ -27,12 +53,11 @@ export class PuzzlesManager {
 
            const content = await this.app.vault.read(file)
            
-           const puzzles = this.extractChessPuzzleBlocks(file, content)
+           const extracted = this.extractChessPuzzleBlocks(file, content)
 
            decks.push({
             name: file.basename,
-            filePath: file.path,
-            puzzles
+            puzzles: extracted
            })
         }
 
@@ -71,6 +96,7 @@ export class PuzzlesManager {
                 if (parsed) {
 
                     puzzles.push({
+                        filePath: file.path,
                         blockStartLine,
                         blockEndLine: i,
                         ...parsed
@@ -111,14 +137,23 @@ export class PuzzlesManager {
         }
 
         return {
-            name: data.name,
             fen: data.fen,
-            answer: data.answer,
+            bestLine: parseBestLine(data.bestLine),
             lastReview: data.lastReview,
             nextReview: data.nextReview,
             ease: data.ease ? Number(data.ease) : undefined,
             interval: data.interval ? Number(data.interval) : undefined,
         };
     }
+}
+
+const parseBestLine = (answer?: string) => {
+
+    if (!answer) return undefined
+
+    return answer
+        .split(",")
+        .map((move) => move.trim())
+        .filter((move) => move.length > 0)
 }
 

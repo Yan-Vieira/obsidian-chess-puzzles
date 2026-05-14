@@ -1,28 +1,28 @@
 import { App, Modal } from "obsidian"
 import { createRoot, Root } from "react-dom/client"
-import ModalComponent from "./DecksPanel"
-import { PuzzlesManager } from "services/puzzlesService"
+import DecksPanel from "./DecksPanel"
+import { PuzzlesService } from "services/PuzzlesService"
 
 export default class DecksPanelModal extends Modal {
 
     root?:Root
 
-    puzzlesManager:PuzzlesManager
+    puzzlesService:PuzzlesService
 
     constructor(app:App) {
 
         super(app)
 
-        this.puzzlesManager = new PuzzlesManager(app)
+        this.puzzlesService = new PuzzlesService(app)
     }
 
     async onOpen() {
 
-        const decks = await this.puzzlesManager.getDecks()
+        const decks = await this.puzzlesService.getAllDecks()
 
         this.root = createRoot(this.contentEl)
 
-        this.root.render(<ModalComponent decks={decks}/>)
+        this.root.render(<DecksPanel decks={decks}/>)
     }
 
     onClose(): void {
