@@ -1,0 +1,1 @@
+declare type ReviewResult = "again"| "hard" | "good" | "easy"

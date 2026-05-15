@@ -1,4 +1,5 @@
 import { App, getAllTags, TFile } from "obsidian";
+import moment from "moment";
 
 export class PuzzlesService {
 
@@ -7,6 +8,42 @@ export class PuzzlesService {
     constructor(app:App) {
 
         this.app = app
+    }
+
+    public static calculateNextReview(
+        reviewResult:ReviewResult, currentInterval:number = 0, currentEase:number = 2.5
+    ) {
+
+        const today = moment()
+            
+        let interval = currentInterval
+        let ease = currentEase
+
+        if (reviewResult === "again") {
+            interval = 0;
+            ease = Math.max(1.3, ease - 0.2)
+        }
+
+        if (reviewResult === "hard") {
+            interval = Math.max(1, Math.round(interval * 1.2))
+            ease = Math.max(1.3, ease - 0.15)
+        }
+
+        if (reviewResult === "good") {
+            interval = interval <= 0 ? 3 : Math.round(interval * ease)
+        }
+
+        if (reviewResult === "easy") {
+            interval = interval <= 0 ? 5 : Math.round(interval * ease * 1.3)
+            ease = ease + 0.15
+        }
+
+        return {
+            lastReview: today.format("YYYY-MM-DD"),
+            nextReview: today.clone().add(interval, "days").format("YYYY-MM-DD"),
+            ease: Math.round(ease * 100) / 100,
+            interval,
+        }
     }
 
     public async getAllPuzzles() {
@@ -64,6 +101,27 @@ export class PuzzlesService {
         return decks
     }
 
+    public async updateReviewFields(puzzle: ChessPuzzle) {
+
+        const file = this.app.vault.getAbstractFileByPath(puzzle.filePath)
+
+        if (!(file instanceof TFile)) {
+            throw new Error(`Chess puzzles error: file not found, ${puzzle.filePath}`)
+        }
+
+        const content = await this.app.vault.read(file)
+        const lines = content.split("\n")
+        const localizedPuzzle = this.localizePuzzleBlock(file, lines, puzzle)
+
+        const updatedLines = this.updateChessPuzzleBlockReviewFields(lines, localizedPuzzle)
+        const lineCountDelta = updatedLines.length - lines.length
+
+        puzzle.blockStartLine = localizedPuzzle.blockStartLine
+        puzzle.blockEndLine = localizedPuzzle.blockEndLine + lineCountDelta
+
+        await this.app.vault.modify(file, updatedLines.join("\n"))
+    }
+
     private extractChessPuzzleBlocks(file: TFile, content: string) {
 
         const puzzles: ChessPuzzle[] = []
@@ -73,8 +131,9 @@ export class PuzzlesService {
         let blockStartLine = 0;
         let blockContent: string[] = [];
 
-        let i = 0
-        for (const line of lines) {
+        for (let i = 0; i < lines.length; i++) {
+
+            const line = lines[i] ?? ""
 
             const trimmed = line.trim()
 
@@ -83,8 +142,6 @@ export class PuzzlesService {
                 isInsideChessPuzzleBlock = true;
                 blockStartLine = i;
                 blockContent = [];
-
-                i++
 
                 continue;
             }
@@ -116,6 +173,134 @@ export class PuzzlesService {
         return puzzles
     }
 
+    private localizePuzzleBlock(file: TFile, lines: string[], puzzle: ChessPuzzle) {
+
+        const puzzleAtStoredRange = this.getPuzzleAtLineRange(file, lines, puzzle.blockStartLine, puzzle.blockEndLine)
+
+        if (puzzleAtStoredRange && this.isSamePuzzle(puzzleAtStoredRange, puzzle)) {
+
+            return {
+                ...puzzle,
+                blockStartLine: puzzleAtStoredRange.blockStartLine,
+                blockEndLine: puzzleAtStoredRange.blockEndLine,
+            }
+        }
+
+        const matchingPuzzle = this.extractChessPuzzleBlocks(file, lines.join("\n"))
+            .filter((candidate) => this.isSamePuzzle(candidate, puzzle))
+            .sort((a, b) =>
+                Math.abs(a.blockStartLine - puzzle.blockStartLine) -
+                Math.abs(b.blockStartLine - puzzle.blockStartLine)
+            )[0]
+
+        if (!matchingPuzzle) {
+            throw new Error("Chess puzzle block could not be found in the current file content.")
+        }
+
+        return {
+            ...puzzle,
+            blockStartLine: matchingPuzzle.blockStartLine,
+            blockEndLine: matchingPuzzle.blockEndLine,
+        }
+    }
+
+    private getPuzzleAtLineRange(file: TFile, lines: string[], blockStartLine: number, blockEndLine: number) {
+
+        if (
+            lines[blockStartLine]?.trim() !== "```chess-puzzle" ||
+            lines[blockEndLine]?.trim() !== "```"
+        ) {
+            return undefined
+        }
+
+        const parsed = this.parseChessPuzzleBlock(
+            lines.slice(blockStartLine + 1, blockEndLine).join("\n")
+        )
+
+        if (!parsed) return undefined
+
+        return {
+            filePath: file.path,
+            blockStartLine,
+            blockEndLine,
+            ...parsed,
+        }
+    }
+
+    private isSamePuzzle(candidate: ChessPuzzle, puzzle: ChessPuzzle) {
+
+        const hasFen = puzzle.fen !== undefined
+        const hasBestLine = Boolean(puzzle.bestLine?.length)
+
+        if (!hasFen && !hasBestLine) return false
+
+        if (hasFen && candidate.fen !== puzzle.fen) return false
+        if (hasBestLine && !this.areBestLinesEqual(candidate.bestLine, puzzle.bestLine)) return false
+
+        return true
+    }
+
+    private areBestLinesEqual(candidateBestLine?: string[], puzzleBestLine?: string[]) {
+
+        if (!candidateBestLine || !puzzleBestLine) return false
+        if (candidateBestLine.length !== puzzleBestLine.length) return false
+
+        return candidateBestLine.every((move, index) => move === puzzleBestLine[index])
+    }
+
+    private updateChessPuzzleBlockReviewFields(lines: string[], puzzle: ChessPuzzle) {
+
+        const updatedLines = [...lines]
+        const reviewFields = this.getReviewFields(puzzle)
+        const pendingFields = new Map(reviewFields)
+        const blockContentStart = puzzle.blockStartLine + 1
+        const blockContentEnd = puzzle.blockEndLine
+
+        for (let i = blockContentStart; i < blockContentEnd; i++) {
+
+            const key = this.getChessPuzzleBlockLineKey(updatedLines[i] ?? "")
+
+            if (!key || !pendingFields.has(key)) continue
+
+            const value = pendingFields.get(key)
+
+            updatedLines[i] = `${key}: ${value}`
+            pendingFields.delete(key)
+        }
+
+        const fieldsToAppend = Array.from(pendingFields.entries())
+            .map(([key, value]) => `${key}: ${value}`)
+
+        updatedLines.splice(blockContentEnd, 0, ...fieldsToAppend)
+
+        return updatedLines
+    }
+
+    private getReviewFields(puzzle: ChessPuzzle): [string, string][] {
+
+        const fields: [string, string][] = []
+
+        if (puzzle.lastReview !== undefined) fields.push(["lastReview", puzzle.lastReview])
+        if (puzzle.nextReview !== undefined) fields.push(["nextReview", puzzle.nextReview])
+        if (puzzle.ease !== undefined) fields.push(["ease", String(puzzle.ease)])
+        if (puzzle.interval !== undefined) fields.push(["interval", String(puzzle.interval)])
+
+        return fields
+    }
+
+    private getChessPuzzleBlockLineKey(line: string) {
+
+        const trimmed = line.trim()
+
+        if (!trimmed || trimmed.startsWith("#")) return undefined
+
+        const separatorIndex = trimmed.indexOf(":")
+
+        if (separatorIndex === -1) return undefined
+
+        return trimmed.slice(0, separatorIndex).trim()
+    }
+
     private parseChessPuzzleBlock(content: string): Partial<ChessPuzzle> | null {
 
         const data: Record<string, string> = {};
@@ -138,22 +323,22 @@ export class PuzzlesService {
 
         return {
             fen: data.fen,
-            bestLine: parseBestLine(data.bestLine),
+            bestLine: this.parseBestLine(data.bestLine),
             lastReview: data.lastReview,
             nextReview: data.nextReview,
             ease: data.ease ? Number(data.ease) : undefined,
             interval: data.interval ? Number(data.interval) : undefined,
         };
     }
-}
 
-const parseBestLine = (answer?: string) => {
+    private parseBestLine (answer?: string) {
 
-    if (!answer) return undefined
+        if (!answer) return undefined
 
-    return answer
-        .split(",")
-        .map((move) => move.trim())
-        .filter((move) => move.length > 0)
+        return answer
+            .split(",")
+            .map((move) => move.trim())
+            .filter((move) => move.length > 0)
+    }
 }
 

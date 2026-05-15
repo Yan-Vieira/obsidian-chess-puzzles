@@ -25,7 +25,9 @@ export default class ReviewPuzzleModal extends Modal {
             
             switch (this.reviewType) {
 
-                case (ReviewType.ALL_PUZZLES): this.reviewAllPuzzles()
+                case (ReviewType.ALL_PUZZLES):
+                    this.reviewAllPuzzles()
+                    break
 
                 default: new Notice("No handler for the review type " + this.reviewType)
             }
@@ -53,7 +55,10 @@ export default class ReviewPuzzleModal extends Modal {
 
             this.root.render(
                 <ErrorBoundary>
-                    <ReviewPuzzle puzzles={puzzles}/>
+                    <ReviewPuzzle
+                        puzzles={puzzles}
+                        updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                    />
                 </ErrorBoundary>
             )
     }

@@ -1,12 +1,15 @@
 import Chessground from "@react-chess/chessground"
 import useReviewPuzzle from "./use-review-puzzle"
 import formatPuzzlePath from "./utils/formatPuzzlePath"
+import Board from "./Board"
+import EaseFeedback from "./EaseFeedback"
 
 export interface ReviewPuzzleProps {
-    puzzles: ChessPuzzle[]
+    puzzles: ChessPuzzle[],
+    updatePuzzle: (puzzle:ChessPuzzle) => Promise<void>
 }
 
-export default function ReviewPuzzle({ puzzles }:ReviewPuzzleProps) {
+export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps) {
 
     const {
         currentPuzzle,
@@ -16,34 +19,26 @@ export default function ReviewPuzzle({ puzzles }:ReviewPuzzleProps) {
         currentColor,
         currentCheck,
         isReviewComplete,
+        currentPuzzleFinished,
+        easeFeedbackHandler,
         onMove,
-    } = useReviewPuzzle(puzzles)
+    } = useReviewPuzzle(puzzles, updatePuzzle)
 
     return (
         <>
         <main className={"review-puzzle"}>
             {!isReviewComplete && (
-                <>
-                <em>{formatPuzzlePath(currentPuzzle)}</em>
-                <Chessground
-                    key={boardResetVersion}
-                    width={400}
-                    height={400}
-                    config={{
-                        turnColor: currentColor,
-                        fen: currentFen,
-                        check: currentCheck,
-                        movable: {
-                            free: false,
-                            dests: validMoves
-                        },
-                        events: {
-                            move: onMove
-                        }
-                    }}
+                <Board
+                    currentPuzzle={currentPuzzle}
+                    currentFen={currentFen}
+                    boardResetVersion={boardResetVersion}
+                    validMoves={validMoves}
+                    currentColor={currentColor}
+                    currentCheck={currentCheck}
+                    onMove={onMove}
                 />
-                </>
             )}
+            {currentPuzzleFinished && <EaseFeedback onClick={easeFeedbackHandler}/>}
             {isReviewComplete && (
                 <>
                 <p>Congratulations! You finished the puzzle review.</p>

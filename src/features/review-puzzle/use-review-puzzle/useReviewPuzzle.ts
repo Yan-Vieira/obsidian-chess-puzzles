@@ -1,12 +1,14 @@
 import { Chess, Move } from "chess.js"
 import { Notice } from "obsidian"
-import { useMemo, useReducer, useState } from "react"
+import { useMemo, useState } from "react"
 import useValidMoves from "./useValidMoves"
 import useCurrentColor from "./useCurrentColor"
 import useCurrentCheck from "./useCurrentCheck"
 import useReviewStateReducer from "./useReviewStateReducer"
+import { PuzzlesService } from "services/PuzzlesService"
 
-export default function useReviewPuzzle(puzzles: ChessPuzzle[]) {
+export default function useReviewPuzzle(
+    puzzles: ChessPuzzle[], updatePuzzle: (puzzle:ChessPuzzle) => Promise<void>) {
 
     const { reviewState, updateReviewState } = useReviewStateReducer(puzzles)
 
@@ -23,6 +25,7 @@ export default function useReviewPuzzle(puzzles: ChessPuzzle[]) {
     const currentCheck = useCurrentCheck(chess, currentColor, reviewState.currentFen)
 
     const [isReviewComplete, setIsReviewComplete] = useState(false)
+    const [currentPuzzleFinished, setCurrentPuzzleFinished] = useState(false)
 
     const onMove = (from:string, to:string) => {
 
@@ -48,14 +51,17 @@ export default function useReviewPuzzle(puzzles: ChessPuzzle[]) {
 
             if (isBestLineComplete(currentPuzzle?.bestLine, nextBestLineIndex)) {
 
-                if (!puzzles[reviewState.currentPuzzleIndex + 1]) {
+                setCurrentPuzzleFinished(true)
 
-                    setIsReviewComplete(true)
+                updateReviewState({
+                    type: "accept-move",
+                    currentFen: chess.fen(),
+                    bestLineIndex: nextBestLineIndex
+                })
 
-                    return
-                }
+                /*
 
-                updateReviewState({ type: "go-to-next-puzzle" })
+                updateReviewState({ type: "go-to-next-puzzle" })*/
 
                 return
             }
@@ -74,6 +80,42 @@ export default function useReviewPuzzle(puzzles: ChessPuzzle[]) {
         }
     }
 
+    const easeFeedbackHandler = async (value:ReviewResult) => {
+
+        if (!currentPuzzle) return;
+
+        try {
+
+            const { lastReview, nextReview, interval, ease } =
+                PuzzlesService.calculateNextReview(
+                    value, currentPuzzle.interval, currentPuzzle.ease)
+
+            currentPuzzle.lastReview = lastReview
+            currentPuzzle.nextReview = nextReview
+            currentPuzzle.interval = interval
+            currentPuzzle.ease = ease
+
+            await updatePuzzle(currentPuzzle)
+
+            setCurrentPuzzleFinished(false)
+
+            if (!puzzles[reviewState.currentPuzzleIndex + 1]) {
+
+                setIsReviewComplete(true)
+
+                return;
+            }
+
+            updateReviewState({ type: "go-to-next-puzzle" })
+
+        } catch (error) {
+
+            console.log("Chess puzzles error: ", error)
+
+            new Notice("Chess puzzles error: could not update review fields.")
+        }
+    }
+
     return {
         currentPuzzle,
         currentFen: reviewState.currentFen,
@@ -81,8 +123,11 @@ export default function useReviewPuzzle(puzzles: ChessPuzzle[]) {
         validMoves,
         currentColor,
         currentCheck,
+        currentPuzzleFinished,
         isReviewComplete,
-        onMove
+        setCurrentPuzzleFinished,
+        easeFeedbackHandler,
+        onMove,
     }
 }
 
