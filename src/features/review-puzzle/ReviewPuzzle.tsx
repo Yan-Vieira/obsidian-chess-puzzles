@@ -1,6 +1,4 @@
-import Chessground from "@react-chess/chessground"
 import useReviewPuzzle from "./use-review-puzzle"
-import formatPuzzlePath from "./utils/formatPuzzlePath"
 import Board from "./Board"
 import EaseFeedback from "./EaseFeedback"
 
@@ -17,11 +15,15 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
         boardResetVersion,
         validMoves,
         currentColor,
+        playerColor,
         currentCheck,
+        isPromotion,
+        promotionMoveTo,
         isReviewComplete,
         currentPuzzleFinished,
         easeFeedbackHandler,
         onMove,
+        onPromotion
     } = useReviewPuzzle(puzzles, updatePuzzle)
 
     return (
@@ -34,8 +36,12 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
                     boardResetVersion={boardResetVersion}
                     validMoves={validMoves}
                     currentColor={currentColor}
+                    playerColor={playerColor}
                     currentCheck={currentCheck}
+                    showPromotionMenu={isPromotion}
+                    promotionMoveTo={promotionMoveTo}
                     onMove={onMove}
+                    onPromotion={onPromotion}
                 />
             )}
             {currentPuzzleFinished && <EaseFeedback onClick={easeFeedbackHandler}/>}

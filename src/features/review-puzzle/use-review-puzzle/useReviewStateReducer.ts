@@ -6,11 +6,24 @@ export interface ReviewState {
     currentFen: string
     bestLineIndex: number
     boardResetVersion: number
+    isPromotion: boolean
+    promotionMoveFrom?: string
+    promotionMoveTo?: string
 }
 
 export type ReviewStateAction =
     | {
         type: "accept-move"
+        currentFen: string
+        bestLineIndex: number
+    }
+    | {
+        type: "begin-promotion"
+        promotionMoveFrom: string
+        promotionMoveTo: string
+    }
+    | {
+        type: "end-promotion"
         currentFen: string
         bestLineIndex: number
     }
@@ -27,6 +40,24 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                 case "accept-move":
                     return {
                         ...state,
+                        currentFen: action.currentFen,
+                        bestLineIndex: action.bestLineIndex
+                    }
+
+                case "begin-promotion":
+                    return {
+                        ...state,
+                        isPromotion: true,
+                        promotionMoveFrom: action.promotionMoveFrom,
+                        promotionMoveTo: action.promotionMoveTo
+                    }
+
+                case "end-promotion":
+                    return {
+                        ...state,
+                        isPromotion: false,
+                        promotionMoveFrom: undefined,
+                        promotionMoveTo: undefined,
                         currentFen: action.currentFen,
                         bestLineIndex: action.bestLineIndex
                     }
@@ -66,5 +97,6 @@ const createInitialReviewState = (puzzles: ChessPuzzle[]): ReviewState => ({
     currentPuzzleIndex: 0,
     currentFen: getInitialFen(puzzles[0]),
     bestLineIndex: 0,
-    boardResetVersion: 0
+    boardResetVersion: 0,
+    isPromotion: false
 })

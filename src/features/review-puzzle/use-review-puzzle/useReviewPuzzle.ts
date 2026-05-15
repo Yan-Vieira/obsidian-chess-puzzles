@@ -1,4 +1,4 @@
-import { Chess, Move } from "chess.js"
+import { Chess, Move, PieceSymbol, Square } from "chess.js"
 import { Notice } from "obsidian"
 import { useMemo, useState } from "react"
 import useValidMoves from "./useValidMoves"
@@ -6,6 +6,7 @@ import useCurrentColor from "./useCurrentColor"
 import useCurrentCheck from "./useCurrentCheck"
 import useReviewStateReducer from "./useReviewStateReducer"
 import { PuzzlesService } from "services/PuzzlesService"
+import toChessgroundColor from "./toChessgroundColor"
 
 export default function useReviewPuzzle(
     puzzles: ChessPuzzle[], updatePuzzle: (puzzle:ChessPuzzle) => Promise<void>) {
@@ -19,9 +20,13 @@ export default function useReviewPuzzle(
             () => currentPuzzle?.fen ? new Chess(currentPuzzle.fen) : new Chess(),
             [currentPuzzle?.fen]
         )
-    
+
     const validMoves = useValidMoves(chess, reviewState.currentFen)
     const currentColor = useCurrentColor(chess, reviewState.currentFen)
+    const playerColor = useMemo(
+        () => toChessgroundColor(currentPuzzle?.fen ? new Chess(currentPuzzle.fen).turn() : new Chess().turn()),
+        [currentPuzzle?.fen]
+    )
     const currentCheck = useCurrentCheck(chess, currentColor, reviewState.currentFen)
 
     const [isReviewComplete, setIsReviewComplete] = useState(false)
@@ -31,7 +36,33 @@ export default function useReviewPuzzle(
 
         try {
 
-            if (!isBestLineMove(chess, from, to, currentPuzzle?.bestLine, reviewState.bestLineIndex)) {
+            const piece = chess.get(from as Square)
+
+            if (
+                !reviewState.isPromotion
+                && piece
+                && isPromotion(piece.type, to, currentColor)
+            ) {
+
+                if (!isBestLinePromotionDestination(chess, from, to, currentPuzzle?.bestLine, reviewState.bestLineIndex)) {
+
+                    updateReviewState({ type: "reject-move" })
+
+                    new Notice("Wrong move")
+
+                    return
+                }
+
+                updateReviewState({
+                    type: "begin-promotion",
+                    promotionMoveFrom: from,
+                    promotionMoveTo: to
+                })
+
+                return
+            }
+
+            if (!isBestLineMove(chess, from, to, undefined, currentPuzzle?.bestLine, reviewState.bestLineIndex)) {
 
                 updateReviewState({ type: "reject-move" })
 
@@ -40,37 +71,9 @@ export default function useReviewPuzzle(
                 return
             }
 
-            chess.move({from, to})
+            chess.move({ from, to })
 
-            let nextBestLineIndex = reviewState.bestLineIndex + 1
-
-            if (playOpponentMove(chess, currentPuzzle?.bestLine, nextBestLineIndex)) {
-                
-                nextBestLineIndex++
-            }
-
-            if (isBestLineComplete(currentPuzzle?.bestLine, nextBestLineIndex)) {
-
-                setCurrentPuzzleFinished(true)
-
-                updateReviewState({
-                    type: "accept-move",
-                    currentFen: chess.fen(),
-                    bestLineIndex: nextBestLineIndex
-                })
-
-                /*
-
-                updateReviewState({ type: "go-to-next-puzzle" })*/
-
-                return
-            }
-
-            updateReviewState({
-                type: "accept-move",
-                currentFen: chess.fen(),
-                bestLineIndex: nextBestLineIndex
-            })
+            acceptPlayerMove(chess)
 
         } catch (error) {
 
@@ -78,6 +81,78 @@ export default function useReviewPuzzle(
 
             new Notice("Chess puzzles error: invaid move.")
         }
+    }
+
+    const onPromotion = (promotion: PieceSymbol) => {
+
+        try {
+
+            if (!reviewState.promotionMoveFrom || !reviewState.promotionMoveTo)
+                throw new Error("Either reviewState.promotionMoveFrom or reviewState.promotionMoveTo is undefined")
+
+            if (
+                !isBestLineMove(
+                    chess,
+                    reviewState.promotionMoveFrom,
+                    reviewState.promotionMoveTo,
+                    promotion,
+                    currentPuzzle?.bestLine,
+                    reviewState.bestLineIndex
+                )
+            ) {
+
+                updateReviewState({ type: "reject-move" })
+
+                new Notice("Wrong promotion")
+
+                return
+            }
+
+            chess.move({
+                from: reviewState.promotionMoveFrom,
+                to: reviewState.promotionMoveTo,
+                promotion
+            })
+
+            acceptPlayerMove(chess, true)
+
+        } catch (error) {
+
+            console.log(error)
+
+            new Notice("Chess puzzles error: invaid promotion.")
+        }
+    }
+
+    const acceptPlayerMove = (chessInstance: Chess, isPromotionMove = false) => {
+
+        let nextBestLineIndex = reviewState.bestLineIndex + 1
+
+        if (playOpponentMove(chessInstance, currentPuzzle?.bestLine, nextBestLineIndex)) {
+
+            nextBestLineIndex++
+        }
+
+        const actionType = isPromotionMove ? "end-promotion" : "accept-move"
+
+        if (isBestLineComplete(currentPuzzle?.bestLine, nextBestLineIndex)) {
+
+            setCurrentPuzzleFinished(true)
+
+            updateReviewState({
+                type: actionType,
+                currentFen: chessInstance.fen(),
+                bestLineIndex: nextBestLineIndex
+            })
+
+            return
+        }
+
+        updateReviewState({
+            type: actionType,
+            currentFen: chessInstance.fen(),
+            bestLineIndex: nextBestLineIndex
+        })
     }
 
     const easeFeedbackHandler = async (value:ReviewResult) => {
@@ -122,13 +197,29 @@ export default function useReviewPuzzle(
         boardResetVersion: reviewState.boardResetVersion,
         validMoves,
         currentColor,
+        playerColor,
         currentCheck,
         currentPuzzleFinished,
+        isPromotion: reviewState.isPromotion,
+        promotionMoveTo: reviewState.promotionMoveTo,
         isReviewComplete,
         setCurrentPuzzleFinished,
         easeFeedbackHandler,
         onMove,
+        onPromotion
     }
+}
+
+
+const isPromotion = (piece: PieceSymbol, square:string, currentColor:"white"|"black") => {
+
+    if (piece !== "p") return false
+
+    if (currentColor === "white" && square.charAt(1) === "8") return true
+
+    if (currentColor === "black" && square.charAt(1) === "1") return true
+
+    return false
 }
 
 const isBestLineComplete = (
@@ -140,6 +231,7 @@ const isBestLineMove = (
     chessInstance: Chess,
     from: string,
     to: string,
+    promotion: PieceSymbol | undefined,
     bestLine: string[] | undefined,
     bestLineIndex: number
 ) => {
@@ -149,7 +241,7 @@ const isBestLineMove = (
     if (!expectedMove) return true
     if (bestLineIndex % 2 !== 0) return false
 
-    const move = getCandidateMove(chessInstance, from, to)
+    const move = getCandidateMove(chessInstance, from, to, promotion)
 
     if (!move) return false
 
@@ -180,18 +272,40 @@ const playOpponentMove = (
     return true
 }
 
-const getCandidateMove = (chessInstance: Chess, from: string, to: string): Move | null => {
+const getCandidateMove = (
+    chessInstance: Chess,
+    from: string,
+    to: string,
+    promotion?: PieceSymbol
+): Move | null => {
 
     const candidate = new Chess(chessInstance.fen())
 
     try {
 
-        return candidate.move({ from, to })
+        return candidate.move({ from, to, promotion })
 
     } catch {
 
         return null
     }
+}
+
+const isBestLinePromotionDestination = (
+    chessInstance: Chess,
+    from: string,
+    to: string,
+    bestLine: string[] | undefined,
+    bestLineIndex: number
+) => {
+
+    const expectedMove = bestLine?.[bestLineIndex]
+
+    if (!expectedMove) return true
+
+    return ["q", "n", "r", "b"].some((promotion) =>
+        isBestLineMove(chessInstance, from, to, promotion as PieceSymbol, bestLine, bestLineIndex)
+    )
 }
 
 const findMove = (chessInstance: Chess, expectedMove: string): Move | null => {
@@ -212,5 +326,6 @@ const findMove = (chessInstance: Chess, expectedMove: string): Move | null => {
 const normalizeMoveText = (move: string) => move
     .trim()
     .replace(/\s+/g, "")
-    .replace(/[-x]/g, "")
+    .replace(/[=+#-]/g, "")
+    .replace(/x/g, "")
     .toLowerCase()
