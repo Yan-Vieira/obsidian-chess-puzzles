@@ -37,7 +37,7 @@ To declare a deck, simply add the `#chess-puzzles` tag in the note frontmatter. 
 
 ### Creating a puzzle
 
-Write a `chess-puzzle` codeblock inside the deck:
+Write a `chess-puzzle` code-block inside the deck:
 
 ~~~
 ```chess-puzzle
