@@ -4,6 +4,7 @@ import type { Dests, Color } from "chessground/types"
 import PromotionMenu from "./PromotionMenu"
 import { PieceSymbol } from "chess.js"
 import { useEffect, useRef, useState } from "react"
+import getChessgroundStyle from "./ChessgroundStyle"
 
 const DEFAULT_BOARD_SIZE = 400
 
@@ -103,6 +104,7 @@ export default function Board({
                     aspect-ratio: 1 / 1;
                 }
             `}
+            {getChessgroundStyle()}
         </style>
         </>
     )
