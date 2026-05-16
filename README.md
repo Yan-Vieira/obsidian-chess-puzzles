@@ -2,7 +2,7 @@
 
 > Train chess patterns inside Obsidian with your own puzzles and spaced repetition.
 
-Chess Puzzles is an Obsidian plugin that lets you create and review chess puzzles (like the chess problems in Lichess and Chess.com) directly in Markdown notes.
+An Obsidian plugin that lets you create and review chess puzzles (like the chess problems in Lichess and Chess.com) directly in Markdown notes.
 
 ## 📂 Motivation
 
