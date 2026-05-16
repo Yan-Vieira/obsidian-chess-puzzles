@@ -1,5 +1,6 @@
 import { PieceSymbol } from "chess.js"
 import type { Color } from "chessground/types"
+import { useEffect, useRef } from "react"
 
 const PIECE_SYMBOLS: Record<Color, Record<PieceSymbol, string>> = {
     white: {
@@ -28,14 +29,31 @@ export interface PromotionMenuProps {
     }
     color: Color
     onClick: (promotion:PieceSymbol) => void
+    onCancel: () => void
 }
 
-export default function PromotionMenu({ position, color, onClick }:PromotionMenuProps) {
+export default function PromotionMenu({ position, color, onClick, onCancel }:PromotionMenuProps) {
 
     const pieces = PIECE_SYMBOLS[color]
+    const menuRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+
+        const onPointerDown = (event: PointerEvent) => {
+
+            if (menuRef.current?.contains(event.target as Node)) return
+
+            onCancel()
+        }
+
+        document.addEventListener("pointerdown", onPointerDown)
+
+        return () => document.removeEventListener("pointerdown", onPointerDown)
+    }, [onCancel])
 
     return (
         <div
+            ref={menuRef}
             className="chess-puzzle-promotion-menu"
             style={{
                 left: `${position.left}px`,
@@ -49,12 +67,6 @@ export default function PromotionMenu({ position, color, onClick }:PromotionMenu
             <button aria-label="Promote to bishop" onClick={() => onClick("b")}>{pieces.b}</button>
             <style>
                 {`
-                    .chess-puzzle-board {
-                        position: relative;
-                        width: 400px;
-                        height: 400px;
-                    }
-
                     .chess-puzzle-promotion-menu {
                         position: absolute;
                         z-index: 20;
@@ -72,8 +84,10 @@ export default function PromotionMenu({ position, color, onClick }:PromotionMenu
                         width: 34px;
                         height: 34px;
                         padding: 0;
+                        font-size: 1.5rem;
                         font-weight: 700;
                         line-height: 1;
+                        cursor: pointer;
                     }
                 `}
             </style>

@@ -27,6 +27,7 @@ export type ReviewStateAction =
         currentFen: string
         bestLineIndex: number
     }
+    | { type: "cancel-promotion" }
     | { type: "go-to-next-puzzle" }
     | { type: "reject-move" }
 
@@ -47,6 +48,7 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                 case "begin-promotion":
                     return {
                         ...state,
+                        boardResetVersion: state.boardResetVersion + 1,
                         isPromotion: true,
                         promotionMoveFrom: action.promotionMoveFrom,
                         promotionMoveTo: action.promotionMoveTo
@@ -62,6 +64,15 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                         bestLineIndex: action.bestLineIndex
                     }
 
+                case "cancel-promotion":
+                    return {
+                        ...state,
+                        boardResetVersion: state.boardResetVersion + 1,
+                        isPromotion: false,
+                        promotionMoveFrom: undefined,
+                        promotionMoveTo: undefined
+                    }
+
                 case "go-to-next-puzzle": {
                     const nextPuzzleIndex = state.currentPuzzleIndex + 1
                     const nextPuzzle = puzzles[nextPuzzleIndex]
@@ -72,14 +83,20 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                         ...state,
                         currentPuzzleIndex: nextPuzzleIndex,
                         currentFen: getInitialFen(nextPuzzle),
-                        bestLineIndex: 0
+                        bestLineIndex: 0,
+                        isPromotion: false,
+                        promotionMoveFrom: undefined,
+                        promotionMoveTo: undefined
                     }
                 }
                 
                 case "reject-move":
                     return {
                         ...state,
-                        boardResetVersion: state.boardResetVersion + 1
+                        boardResetVersion: state.boardResetVersion + 1,
+                        isPromotion: false,
+                        promotionMoveFrom: undefined,
+                        promotionMoveTo: undefined
                     }
             }
         },

@@ -19,6 +19,7 @@ export interface BoardProps {
     promotionMoveTo?: string
     onMove: (from: string, to: string) => void
     onPromotion: (promotion: PieceSymbol) => void
+    onCancelPromotion: () => void
 }
 
 export default function Board({
@@ -32,7 +33,8 @@ export default function Board({
     showPromotionMenu,
     promotionMoveTo,
     onMove,
-    onPromotion
+    onPromotion,
+    onCancelPromotion
 }:BoardProps) {
 
     const promotionMenuPosition = getPromotionMenuPosition(promotionMoveTo, playerColor)
@@ -64,9 +66,19 @@ export default function Board({
                     position={promotionMenuPosition}
                     color={currentColor}
                     onClick={onPromotion}
+                    onCancel={onCancelPromotion}
                 />
             )}
         </div>
+        <style>
+            {`
+                .chess-puzzle-board {
+                    position: relative;
+                    width: 400px;
+                    height: 400px;
+                }
+            `}
+        </style>
         </>
     )
 }

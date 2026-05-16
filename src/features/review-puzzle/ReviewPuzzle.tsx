@@ -23,7 +23,8 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
         currentPuzzleFinished,
         easeFeedbackHandler,
         onMove,
-        onPromotion
+        onPromotion,
+        cancelPromotion
     } = useReviewPuzzle(puzzles, updatePuzzle)
 
     return (
@@ -42,6 +43,7 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
                     promotionMoveTo={promotionMoveTo}
                     onMove={onMove}
                     onPromotion={onPromotion}
+                    onCancelPromotion={cancelPromotion}
                 />
             )}
             {currentPuzzleFinished && <EaseFeedback onClick={easeFeedbackHandler}/>}

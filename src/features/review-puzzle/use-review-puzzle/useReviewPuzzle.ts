@@ -124,6 +124,11 @@ export default function useReviewPuzzle(
         }
     }
 
+    const cancelPromotion = () => {
+
+        updateReviewState({ type: "cancel-promotion" })
+    }
+
     const acceptPlayerMove = (chessInstance: Chess, isPromotionMove = false) => {
 
         let nextBestLineIndex = reviewState.bestLineIndex + 1
@@ -206,7 +211,8 @@ export default function useReviewPuzzle(
         setCurrentPuzzleFinished,
         easeFeedbackHandler,
         onMove,
-        onPromotion
+        onPromotion,
+        cancelPromotion
     }
 }
 
