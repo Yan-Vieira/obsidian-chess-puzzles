@@ -3,7 +3,8 @@
 	"name": "Chess Puzzles",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Write puzzles in markdown and review it in Anki style",
+	"description": "Write your own chess puzzles in markdown and review them with spaced repetition",
 	"author": "Yan Vieira de Macedo",
+	"authorUrl": "https://github.com/Yan-Vieira",
 	"isDesktopOnly": false
 }
