@@ -10,6 +10,15 @@ export default class ChessPuzzles extends Plugin {
 	async onload() {
 
 		this.addCommand({
+			id: "chess-puzzles-review-pending-puzzles",
+			name: "review pending puzzles",
+			callback: () => {
+				this.modal = new ReviewPuzzleModal(this.app, ReviewType.PENDING_PUZZLES)
+				this.modal.open()
+			}
+		})
+
+		this.addCommand({
 			id: "chess-puzzles-review-all-puzzles",
 			name: "review all puzzles",
 			callback: () => {

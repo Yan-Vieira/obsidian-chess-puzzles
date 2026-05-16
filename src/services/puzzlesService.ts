@@ -72,6 +72,36 @@ export class PuzzlesService {
         return puzzles
     }
 
+    public async getPendingPuzzles() {
+
+        const puzzles:ChessPuzzle[] = []
+
+        const markdownFiles = this.app.vault.getMarkdownFiles()
+
+        for (const file of markdownFiles) {
+
+            const cache = this.app.metadataCache.getFileCache(file)
+
+            if (!cache) continue
+
+            const tags = getAllTags(cache)
+
+            if (!tags || !tags.some(tag => tag === "#chess-puzzles")) continue
+
+           const content = await this.app.vault.read(file)
+           
+           const extracted = this.extractChessPuzzleBlocks(file, content)
+           const today = moment().startOf("day")
+           const pendingPuzzles = extracted.filter((puzzle) =>
+                this.isReviewDue(puzzle.nextReview, today)
+           )
+
+           puzzles.push(...pendingPuzzles)
+        }
+
+        return puzzles
+    }
+
     public async getAllDecks() {
 
         const decks:PuzzleDeck[] = []
@@ -99,6 +129,17 @@ export class PuzzlesService {
         }
 
         return decks
+    }
+
+    private isReviewDue(nextReview: string | undefined, today: moment.Moment) {
+
+        if (!nextReview) return true
+
+        const nextReviewDate = moment(nextReview, "YYYY-MM-DD", true)
+
+        if (!nextReviewDate.isValid()) return false
+
+        return nextReviewDate.isSameOrBefore(today, "day")
     }
 
     public async updateReviewFields(puzzle: ChessPuzzle) {

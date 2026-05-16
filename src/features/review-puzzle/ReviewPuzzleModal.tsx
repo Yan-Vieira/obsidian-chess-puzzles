@@ -25,8 +25,12 @@ export default class ReviewPuzzleModal extends Modal {
             
             switch (this.reviewType) {
 
-                case (ReviewType.ALL_PUZZLES):
+                case ReviewType.ALL_PUZZLES:
                     this.reviewAllPuzzles()
+                    break
+
+                case ReviewType.PENDING_PUZZLES:
+                    this.reviewPendingPuzzles()
                     break
 
                 default: new Notice("No handler for the review type " + this.reviewType)
@@ -51,15 +55,43 @@ export default class ReviewPuzzleModal extends Modal {
 
         const puzzles = await this.puzzlesService.getAllPuzzles()
 
-            this.root = createRoot(this.contentEl)
+        this.root = createRoot(this.contentEl)
 
-            this.root.render(
-                <ErrorBoundary>
-                    <ReviewPuzzle
-                        puzzles={puzzles}
-                        updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
-                    />
-                </ErrorBoundary>
-            )
+        this.root.render(
+            <ErrorBoundary>
+                <ReviewPuzzle
+                    puzzles={puzzles}
+                    updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                />
+            </ErrorBoundary>
+        )
+    }
+
+    private async reviewPendingPuzzles() {
+
+        const puzzles = await this.puzzlesService.getPendingPuzzles()
+
+        if (puzzles.length <= 0) {
+
+            this.contentEl.style = "display: flex; flex-direction: column; align-items: center;"
+
+            this.contentEl.innerHTML = `
+                <p>There's no pending puzzles.</p>
+                <p>To review all puzzles regardless the due, use <strong>review all puzzles</strong> command.</p>
+            `
+
+            return;
+        }
+
+        this.root = createRoot(this.contentEl)
+
+        this.root.render(
+            <ErrorBoundary>
+                <ReviewPuzzle
+                    puzzles={puzzles}
+                    updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                />
+            </ErrorBoundary>
+        )
     }
 }
