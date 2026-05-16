@@ -18,7 +18,7 @@ export function registerChessPuzzleCodeBlockPostProcessor(plugin: Plugin) {
 
         const reviewButton = el.createEl("button", {
             cls: "chess-puzzle-codeblock-review-button",
-            text: "Review",
+            text: "Click here to review",
         })
 
         reviewButton.disabled = !reviewPuzzle
