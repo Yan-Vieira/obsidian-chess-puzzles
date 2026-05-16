@@ -3,9 +3,9 @@ import formatPuzzlePath from "./utils/formatPuzzlePath"
 import type { Dests, Color } from "chessground/types"
 import PromotionMenu from "./PromotionMenu"
 import { PieceSymbol } from "chess.js"
+import { useEffect, useRef, useState } from "react"
 
-const BOARD_SIZE = 400
-const SQUARE_SIZE = BOARD_SIZE / 8
+const DEFAULT_BOARD_SIZE = 400
 
 export interface BoardProps {
     currentPuzzle?: ChessPuzzle
@@ -37,17 +37,42 @@ export default function Board({
     onCancelPromotion
 }:BoardProps) {
 
-    const promotionMenuPosition = getPromotionMenuPosition(promotionMoveTo, playerColor)
+    const boardRef = useRef<HTMLDivElement>(null)
+    const [boardSize, setBoardSize] = useState(DEFAULT_BOARD_SIZE)
+    const promotionMenuPosition = getPromotionMenuPosition(promotionMoveTo, playerColor, boardSize)
+
+    useEffect(() => {
+
+        const boardEl = boardRef.current
+
+        if (!boardEl) return
+
+        const updateBoardSize = () => {
+
+            const nextBoardSize = Math.floor(boardEl.getBoundingClientRect().width)
+
+            if (nextBoardSize > 0) setBoardSize(nextBoardSize)
+        }
+
+        updateBoardSize()
+
+        const resizeObserver = new ResizeObserver(updateBoardSize)
+
+        resizeObserver.observe(boardEl)
+
+        return () => resizeObserver.disconnect()
+    }, [])
 
     return (
         <>
         <em>{formatPuzzlePath(currentPuzzle)}</em>
-        <div className="chess-puzzle-board">
+        <div ref={boardRef} className="chess-puzzle-board">
             <Chessground
-                key={boardResetVersion}
-                width={BOARD_SIZE}
-                height={BOARD_SIZE}
+                key={`${boardResetVersion}-${boardSize}`}
+                width={boardSize}
+                height={boardSize}
                 config={{
+                    coordinates: false,
                     turnColor: currentColor,
                     orientation: playerColor,
                     fen: currentFen,
@@ -74,8 +99,8 @@ export default function Board({
             {`
                 .chess-puzzle-board {
                     position: relative;
-                    width: 400px;
-                    height: 400px;
+                    width: 100%;
+                    aspect-ratio: 1 / 1;
                 }
             `}
         </style>
@@ -83,7 +108,11 @@ export default function Board({
     )
 }
 
-const getPromotionMenuPosition = (square: string | undefined, orientation: Color) => {
+const getPromotionMenuPosition = (
+    square: string | undefined,
+    orientation: Color,
+    boardSize: number
+) => {
 
     if (!square || square.length !== 2) return undefined
 
@@ -94,8 +123,9 @@ const getPromotionMenuPosition = (square: string | undefined, orientation: Color
 
     const visualFileIndex = orientation === "white" ? fileIndex : 7 - fileIndex
     const visualRankIndex = orientation === "white" ? 8 - rank : rank - 1
-    const squareLeft = visualFileIndex * SQUARE_SIZE
-    const squareTop = visualRankIndex * SQUARE_SIZE
+    const squareSize = boardSize / 8
+    const squareLeft = visualFileIndex * squareSize
+    const squareTop = visualRankIndex * squareSize
     const horizontalPosition =
         visualFileIndex === 0 ? "left" :
         visualFileIndex === 7 ? "right" :
@@ -106,12 +136,12 @@ const getPromotionMenuPosition = (square: string | undefined, orientation: Color
         "center"
     const left =
         horizontalPosition === "left" ? squareLeft :
-        horizontalPosition === "right" ? squareLeft + SQUARE_SIZE :
-        squareLeft + SQUARE_SIZE / 2
+        horizontalPosition === "right" ? squareLeft + squareSize :
+        squareLeft + squareSize / 2
     const top =
         verticalPosition === "top" ? squareTop :
-        verticalPosition === "bottom" ? squareTop + SQUARE_SIZE :
-        squareTop + SQUARE_SIZE / 2
+        verticalPosition === "bottom" ? squareTop + squareSize :
+        squareTop + squareSize / 2
     const translateX =
         horizontalPosition === "left" ? "0" :
         horizontalPosition === "right" ? "-100%" :

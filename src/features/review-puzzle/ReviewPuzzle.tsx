@@ -66,6 +66,10 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
                     width: 100%;
                     height: 100%;
                 }
+
+                main.review-puzzle > * {
+                    width: 100%;
+                }
             `}
         </style>
         </>
