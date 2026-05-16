@@ -91,3 +91,8 @@ The plugin automatically recalculates the next review date and updates the puzzl
 Feedback, suggestions, and bug reports are welcome!
 
 Please raise an issue on the [GitHub repository](https://github.com/Yan-Vieira/obsidian-chess-puzzles).
+
+## 👥 Credits
+
+- **Chess logic:** [Chess.js](https://github.com/jhlywa/chess.js/);
+- **Interactive chessboard:** [Chessground](https://github.com/lichess-org/chessground) and [React-chessground](https://github.com/react-chess/chessground).
