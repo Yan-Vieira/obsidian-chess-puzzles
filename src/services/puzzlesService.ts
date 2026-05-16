@@ -189,7 +189,7 @@ export class PuzzlesService {
 
             if (isInsideChessPuzzleBlock && line === "```") {
         
-                const parsed = this.parseChessPuzzleBlock(blockContent.join("\n"));
+                const parsed = PuzzlesService.parseChessPuzzleBlock(blockContent.join("\n"));
 
                 if (parsed) {
 
@@ -254,7 +254,7 @@ export class PuzzlesService {
             return undefined
         }
 
-        const parsed = this.parseChessPuzzleBlock(
+        const parsed = PuzzlesService.parseChessPuzzleBlock(
             lines.slice(blockStartLine + 1, blockEndLine).join("\n")
         )
 
@@ -342,7 +342,7 @@ export class PuzzlesService {
         return trimmed.slice(0, separatorIndex).trim()
     }
 
-    private parseChessPuzzleBlock(content: string): Partial<ChessPuzzle> | null {
+    public static parseChessPuzzleBlock(content: string): Partial<ChessPuzzle> | null {
 
         const data: Record<string, string> = {};
 
@@ -364,7 +364,7 @@ export class PuzzlesService {
 
         return {
             fen: data.fen,
-            bestLine: this.parseBestLine(data.bestLine),
+            bestLine: PuzzlesService.parseBestLine(data.bestLine),
             lastReview: data.lastReview,
             nextReview: data.nextReview,
             ease: data.ease ? Number(data.ease) : undefined,
@@ -372,7 +372,7 @@ export class PuzzlesService {
         };
     }
 
-    private parseBestLine (answer?: string) {
+    private static parseBestLine (answer?: string) {
 
         if (!answer) return undefined
 

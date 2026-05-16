@@ -24,8 +24,6 @@ export default function ListItem({ deck, onClick }:ListItemProps) {
                 <p>Total: {deck.puzzles.length}</p>
                 <button
                     style={{
-                        color: "white",
-                        backgroundColor: "var(--color-accent)",
                         cursor: "pointer"
                     }}
                     onClick={() => onClick(deck)}

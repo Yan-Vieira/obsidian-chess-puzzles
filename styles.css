@@ -1,3 +1,32 @@
+.chess-puzzle-codeblock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+}
+
+.chess-puzzle-codeblock-field {
+  display: flex;
+  gap: 6px;
+}
+
+.chess-puzzle-codeblock-label {
+  font-weight: 600;
+}
+
+.chess-puzzle-codeblock-value {
+  word-break: break-word;
+}
+
+.chess-puzzle-codeblock-review-button {
+  align-self: flex-start;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
 /* CHESSGROUND STYLES*/
 
 .cg-wrap {

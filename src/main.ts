@@ -2,12 +2,15 @@ import {Modal, Plugin} from 'obsidian';
 import PuzzlesPanelModal from 'features/decks-panel/DecksPanelModal';
 import ReviewPuzzleModal from 'features/review-puzzle/ReviewPuzzleModal';
 import { ReviewType } from 'types/ReviewType';
+import { registerChessPuzzleCodeBlockPostProcessor } from 'features/chess-puzzle-codeblock/registerChessPuzzleCodeBlockPostProcessor';
 
 export default class ChessPuzzles extends Plugin {
 
 	modal?:Modal
 
 	async onload() {
+
+		registerChessPuzzleCodeBlockPostProcessor(this)
 
 		this.addCommand({
 			id: "chess-puzzles-review-pending-puzzles",
