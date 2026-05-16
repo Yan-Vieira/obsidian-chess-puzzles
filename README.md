@@ -1,4 +1,4 @@
-# ♟️ Chess Puzzles
+# ♕ Chess Puzzles 🧩
 
 > Train chess patterns inside Obsidian with your own puzzles and spaced repetition.
 
