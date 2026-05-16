@@ -2,7 +2,10 @@ export default function formatPuzzlePath (puzzle?:ChessPuzzle) {
 
     if (!puzzle) return ""
 
-    const end = puzzle.filePath.indexOf(".")
+    const end = puzzle.filePath.lastIndexOf(".")
+    const pathWithoutExtension = end === -1
+        ? puzzle.filePath
+        : puzzle.filePath.slice(0, end)
 
-    return puzzle.filePath.slice(0, end).replace("/", " > ")
+    return pathWithoutExtension.replace(/\//g, " > ")
 }
