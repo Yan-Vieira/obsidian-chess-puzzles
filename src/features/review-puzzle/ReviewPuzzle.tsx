@@ -50,7 +50,7 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
             {isReviewComplete && (
                 <>
                 <p>Congratulations! You finished the puzzle review.</p>
-                <p>Close this window and go rest you brain.</p>
+                <p>Close this window and rest you brain.</p>
                 </>
             )}
         </main>

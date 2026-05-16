@@ -10,13 +10,15 @@ export default class ReviewPuzzleModal extends Modal {
     root?:Root
     puzzlesService:PuzzlesService
     reviewType:ReviewType
+    deck?:PuzzleDeck
 
-    constructor(app:App, reviewType:ReviewType) {
+    constructor(app:App, reviewType:ReviewType, deck?:PuzzleDeck) {
 
         super(app)
 
         this.puzzlesService = new PuzzlesService(app)
         this.reviewType = reviewType
+        this.deck = deck
     }
 
     onOpen() {
@@ -31,6 +33,10 @@ export default class ReviewPuzzleModal extends Modal {
 
                 case ReviewType.PENDING_PUZZLES:
                     this.reviewPendingPuzzles()
+                    break
+
+                case ReviewType.SINGLE_DECK:
+                    this.reviewSingleDeck()
                     break
 
                 default: new Notice("No handler for the review type " + this.reviewType)
@@ -89,6 +95,27 @@ export default class ReviewPuzzleModal extends Modal {
             <ErrorBoundary>
                 <ReviewPuzzle
                     puzzles={puzzles}
+                    updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                />
+            </ErrorBoundary>
+        )
+    }
+
+    private reviewSingleDeck() {
+
+        if (!this.deck) {
+
+            new Notice("Chess puzzles error: no deck selected.")
+
+            return
+        }
+
+        this.root = createRoot(this.contentEl)
+
+        this.root.render(
+            <ErrorBoundary>
+                <ReviewPuzzle
+                    puzzles={this.deck.puzzles}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
                 />
             </ErrorBoundary>
