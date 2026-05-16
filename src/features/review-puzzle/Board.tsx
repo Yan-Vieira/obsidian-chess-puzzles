@@ -73,7 +73,6 @@ export default function Board({
                 width={boardSize}
                 height={boardSize}
                 config={{
-                    coordinates: false,
                     turnColor: currentColor,
                     orientation: playerColor,
                     fen: currentFen,
