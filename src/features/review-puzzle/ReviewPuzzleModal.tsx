@@ -4,21 +4,30 @@ import { PuzzlesService } from "services/PuzzlesService"
 import { ReviewType } from "types/ReviewType"
 import ReviewPuzzle from "./ReviewPuzzle"
 import ErrorBoundary from "features/error-boundary/ErrorBoundary"
+import { ChessPuzzlesSettings } from "settings"
 
 export default class ReviewPuzzleModal extends Modal {
 
     root?:Root
     puzzlesService:PuzzlesService
     reviewType:ReviewType
+    settings:ChessPuzzlesSettings
     deck?:PuzzleDeck
     puzzle?:ChessPuzzle
 
-    constructor(app:App, reviewType:ReviewType, deck?:PuzzleDeck, puzzle?:ChessPuzzle) {
+    constructor(
+        app:App,
+        reviewType:ReviewType,
+        settings:ChessPuzzlesSettings,
+        deck?:PuzzleDeck,
+        puzzle?:ChessPuzzle
+    ) {
 
         super(app)
 
-        this.puzzlesService = new PuzzlesService(app)
+        this.puzzlesService = new PuzzlesService(app, settings)
         this.reviewType = reviewType
+        this.settings = settings
         this.deck = deck
         this.puzzle = puzzle
     }

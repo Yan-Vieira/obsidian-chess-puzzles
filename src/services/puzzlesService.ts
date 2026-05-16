@@ -1,13 +1,16 @@
-import { App, getAllTags, TFile } from "obsidian";
+import { App, getAllTags, Notice, TFile, TFolder } from "obsidian";
 import moment from "moment";
+import { ChessPuzzlesSettings } from "settings";
 
 export class PuzzlesService {
 
     app:App
+    settings:ChessPuzzlesSettings
 
-    constructor(app:App) {
+    constructor(app:App, settings:ChessPuzzlesSettings) {
 
         this.app = app
+        this.settings = settings
     }
 
     public static calculateNextReview(
@@ -50,7 +53,7 @@ export class PuzzlesService {
 
         const puzzles:ChessPuzzle[] = []
 
-        const markdownFiles = this.app.vault.getMarkdownFiles()
+        const markdownFiles = this.getDeckMarkdownFiles()
 
         for (const file of markdownFiles) {
 
@@ -76,7 +79,7 @@ export class PuzzlesService {
 
         const puzzles:ChessPuzzle[] = []
 
-        const markdownFiles = this.app.vault.getMarkdownFiles()
+        const markdownFiles = this.getDeckMarkdownFiles()
 
         for (const file of markdownFiles) {
 
@@ -106,7 +109,7 @@ export class PuzzlesService {
 
         const decks:PuzzleDeck[] = []
 
-        const markdownFiles = this.app.vault.getMarkdownFiles()
+        const markdownFiles = this.getDeckMarkdownFiles()
 
         for (const file of markdownFiles) {
 
@@ -140,6 +143,54 @@ export class PuzzlesService {
         if (!nextReviewDate.isValid()) return false
 
         return nextReviewDate.isSameOrBefore(today, "day")
+    }
+
+    private getDeckMarkdownFiles() {
+
+        const decksFolder = this.settings.decksFolder.trim()
+
+        if (!decksFolder) return this.app.vault.getMarkdownFiles()
+
+        const folder = this.app.vault.getFolderByPath(decksFolder)
+
+        if (!folder) {
+
+            new Notice("No decks found in the configured folder.")
+
+            return []
+        }
+
+        return this.getMarkdownFilesInFolder(folder)
+    }
+
+    private getMarkdownFilesInFolder(folder: TFolder) {
+
+        const markdownFiles: TFile[] = []
+        const pendingFolders: TFolder[] = [folder]
+
+        while (pendingFolders.length > 0) {
+
+            const currentFolder = pendingFolders.pop()
+
+            if (!currentFolder) continue
+
+            for (const child of currentFolder.children) {
+
+                if (child instanceof TFolder) {
+
+                    pendingFolders.push(child)
+
+                    continue
+                }
+
+                if (child instanceof TFile && child.extension === "md") {
+
+                    markdownFiles.push(child)
+                }
+            }
+        }
+
+        return markdownFiles
     }
 
     public async updateReviewFields(puzzle: ChessPuzzle) {

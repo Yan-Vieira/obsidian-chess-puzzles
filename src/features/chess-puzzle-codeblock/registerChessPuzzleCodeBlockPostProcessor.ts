@@ -2,8 +2,12 @@ import { MarkdownPostProcessorContext, Plugin } from "obsidian"
 import { PuzzlesService } from "services/PuzzlesService"
 import ReviewPuzzleModal from "features/review-puzzle/ReviewPuzzleModal"
 import { ReviewType } from "types/ReviewType"
+import { ChessPuzzlesSettings } from "settings"
 
-export function registerChessPuzzleCodeBlockPostProcessor(plugin: Plugin) {
+export function registerChessPuzzleCodeBlockPostProcessor(
+    plugin: Plugin,
+    settings: ChessPuzzlesSettings
+) {
 
     plugin.registerMarkdownCodeBlockProcessor("chess-puzzle", (source, el, ctx) => {
 
@@ -29,6 +33,7 @@ export function registerChessPuzzleCodeBlockPostProcessor(plugin: Plugin) {
             new ReviewPuzzleModal(
                 plugin.app,
                 ReviewType.SINGLE_PUZZLE,
+                settings,
                 undefined,
                 reviewPuzzle
             ).open()
