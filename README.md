@@ -24,8 +24,8 @@ Instead of relying only on public puzzle databases, the plugin encourages player
     - Pending puzzles only;
     - All puzzles in vault.
 - Fully portable puzzles:
-    - review history is stored inside the Markdown block;
-    - move puzzles between vaults without losing progress.
+    - Review history/scheduling is stored inside the Markdown block;
+    - Move puzzles between vaults without losing progress.
 
 ## 📝 Usage
 
