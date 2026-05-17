@@ -253,7 +253,7 @@ export class PuzzlesService {
         
                 const parsed = PuzzlesService.parseChessPuzzleBlock(blockContent.join("\n"));
 
-                if (parsed) {
+                if (parsed && PuzzlesService.validateChessPuzzleBlock(parsed).length === 0) {
 
                     puzzles.push({
                         filePath: file.path,
@@ -432,6 +432,23 @@ export class PuzzlesService {
             ease: data.ease ? Number(data.ease) : undefined,
             interval: data.interval ? Number(data.interval) : undefined,
         };
+    }
+
+    public static validateChessPuzzleBlock(puzzle: Partial<ChessPuzzle> | null) {
+
+        const warnings: string[] = []
+
+        if (!puzzle?.fen?.trim()) {
+
+            warnings.push("Missing required field: fen.")
+        }
+
+        if (!puzzle?.bestLine?.length) {
+
+            warnings.push("Missing required field: bestLine.")
+        }
+
+        return warnings
     }
 
     private static parseBestLine (answer?: string) {

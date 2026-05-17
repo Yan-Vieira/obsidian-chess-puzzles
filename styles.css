@@ -26,3 +26,15 @@
   margin-top: 4px;
   cursor: pointer;
 }
+
+.chess-puzzle-codeblock-warning {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--text-warning);
+  border-radius: 6px;
+  color: var(--text-warning);
+}
+
+.chess-puzzle-codeblock-warning-title {
+  font-weight: 600;
+}

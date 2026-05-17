@@ -12,6 +12,7 @@ export function registerChessPuzzleCodeBlockPostProcessor(
     plugin.registerMarkdownCodeBlockProcessor("chess-puzzle", (source, el, ctx) => {
 
         const puzzle = PuzzlesService.parseChessPuzzleBlock(source)
+        const warnings = PuzzlesService.validateChessPuzzleBlock(puzzle)
         const reviewPuzzle = createReviewPuzzle(source, el, ctx)
 
         el.empty()
@@ -19,6 +20,7 @@ export function registerChessPuzzleCodeBlockPostProcessor(
 
         renderField(el, "FEN", puzzle?.fen ?? "")
         renderField(el, "Next review", puzzle?.nextReview ?? "")
+        renderWarnings(el, warnings)
 
         const reviewButton = el.createEl("button", {
             cls: "chess-puzzle-codeblock-review-button",
@@ -50,6 +52,7 @@ function createReviewPuzzle(
     const puzzle = PuzzlesService.parseChessPuzzleBlock(source)
 
     if (!puzzle) return undefined
+    if (PuzzlesService.validateChessPuzzleBlock(puzzle).length > 0) return undefined
 
     const sectionInfo = ctx.getSectionInfo(el)
 
@@ -72,4 +75,23 @@ function renderField(container: HTMLElement, label: string, value: string) {
         cls: "chess-puzzle-codeblock-value",
         text: value || "-",
     })
+}
+
+function renderWarnings(container: HTMLElement, warnings: string[]) {
+
+    if (warnings.length === 0) return
+
+    const warningContainer = container.createDiv({
+        cls: "chess-puzzle-codeblock-warning",
+    })
+
+    warningContainer.createDiv({
+        cls: "chess-puzzle-codeblock-warning-title",
+        text: "This puzzle is incomplete and will not be indexed.",
+    })
+
+    for (const warning of warnings) {
+
+        warningContainer.createDiv({ text: warning })
+    }
 }
