@@ -49,6 +49,17 @@ export class PuzzlesService {
         }
     }
 
+    public static wasReviewedToday(lastReview?: string) {
+
+        if (!lastReview) return false
+
+        const lastReviewDate = moment(lastReview, "YYYY-MM-DD", true)
+
+        if (!lastReviewDate.isValid()) return false
+
+        return lastReviewDate.isSame(moment(), "day")
+    }
+
     public async getAllPuzzles() {
 
         const puzzles:ChessPuzzle[] = []

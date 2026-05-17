@@ -166,16 +166,19 @@ export default function useReviewPuzzle(
 
         try {
 
-            const { lastReview, nextReview, interval, ease } =
-                PuzzlesService.calculateNextReview(
-                    value, currentPuzzle.interval, currentPuzzle.ease)
+            if (!PuzzlesService.wasReviewedToday(currentPuzzle.lastReview)) {
 
-            currentPuzzle.lastReview = lastReview
-            currentPuzzle.nextReview = nextReview
-            currentPuzzle.interval = interval
-            currentPuzzle.ease = ease
+                const { lastReview, nextReview, interval, ease } =
+                    PuzzlesService.calculateNextReview(
+                        value, currentPuzzle.interval, currentPuzzle.ease)
 
-            await updatePuzzle(currentPuzzle)
+                currentPuzzle.lastReview = lastReview
+                currentPuzzle.nextReview = nextReview
+                currentPuzzle.interval = interval
+                currentPuzzle.ease = ease
+
+                await updatePuzzle(currentPuzzle)
+            }
 
             setCurrentPuzzleFinished(false)
 
