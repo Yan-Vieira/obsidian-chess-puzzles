@@ -81,7 +81,7 @@ export default class ReviewPuzzleModal extends Modal {
         this.root.render(
             <ErrorBoundary>
                 <ReviewPuzzle
-                    puzzles={puzzles}
+                    puzzles={shufflePuzzles(puzzles)}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
                 />
             </ErrorBoundary>
@@ -109,7 +109,7 @@ export default class ReviewPuzzleModal extends Modal {
         this.root.render(
             <ErrorBoundary>
                 <ReviewPuzzle
-                    puzzles={puzzles}
+                    puzzles={shufflePuzzles(puzzles)}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
                 />
             </ErrorBoundary>
@@ -130,7 +130,7 @@ export default class ReviewPuzzleModal extends Modal {
         this.root.render(
             <ErrorBoundary>
                 <ReviewPuzzle
-                    puzzles={this.deck.puzzles}
+                    puzzles={shufflePuzzles(this.deck.puzzles)}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
                 />
             </ErrorBoundary>
@@ -157,4 +157,23 @@ export default class ReviewPuzzleModal extends Modal {
             </ErrorBoundary>
         )
     }
+}
+
+const shufflePuzzles = (puzzles: ChessPuzzle[]) => {
+
+    const shuffledPuzzles = [...puzzles]
+
+    for (let i = shuffledPuzzles.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1))
+        const currentPuzzle = shuffledPuzzles[i]
+        const targetPuzzle = shuffledPuzzles[j]
+
+        if (!currentPuzzle || !targetPuzzle) continue
+
+        shuffledPuzzles[i] = targetPuzzle
+        shuffledPuzzles[j] = currentPuzzle
+    }
+
+    return shuffledPuzzles
 }
