@@ -33,11 +33,11 @@ export class PuzzlesService {
         }
 
         if (reviewResult === "good") {
-            interval = interval <= 0 ? 3 : Math.round(interval * ease)
+            interval = interval <= 0 ? 1 : Math.round(interval * ease)
         }
 
         if (reviewResult === "easy") {
-            interval = interval <= 0 ? 5 : Math.round(interval * ease * 1.3)
+            interval = interval <= 0 ? 1 : Math.round(interval * ease * 1.3)
             ease = ease + 0.15
         }
 
