@@ -4,6 +4,10 @@
 
 An Obsidian plugin that lets you create and review chess puzzles (like the chess problems in Lichess and Chess.com) directly in Markdown notes.
 
+<div align="center">
+	<img width="400" height="400" alt="Chess Puzzles screenshot. Example of reviewing a puzzle" src="https://github.com/user-attachments/assets/48c434d7-b8e3-4a64-a0db-c5f37694c1bb" />
+</div>
+
 ## ❤️ Motivation
 
 Instead of relying only on public puzzle databases, the plugin encourages players to build a personal collection of patterns extracted from:
