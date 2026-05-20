@@ -1,6 +1,6 @@
 import Chessground from "@react-chess/chessground"
 import formatPuzzlePath from "./utils/formatPuzzlePath"
-import type { Dests, Color } from "chessground/types"
+import type { Dests, Color, Key } from "chessground/types"
 import PromotionMenu from "./PromotionMenu"
 import { PieceSymbol } from "chess.js"
 import { useEffect, useRef, useState } from "react"
@@ -12,6 +12,7 @@ export interface BoardProps {
     currentPuzzle?: ChessPuzzle
     currentFen: string
     boardResetVersion: number
+    lastMove?: [Key, Key]
     validMoves: Dests
     currentColor: Color
     playerColor: Color
@@ -27,6 +28,7 @@ export default function Board({
     currentPuzzle,
     currentFen,
     boardResetVersion,
+    lastMove,
     validMoves,
     currentColor,
     playerColor,
@@ -77,6 +79,7 @@ export default function Board({
                     orientation: playerColor,
                     fen: currentFen,
                     check: currentCheck,
+                    lastMove: lastMove,
                     movable: {
                         free: false,
                         dests: validMoves

@@ -1,4 +1,5 @@
 import { Chess } from "chess.js"
+import type { Key } from "chessground/types"
 import { useReducer } from "react"
 
 export interface ReviewState {
@@ -6,6 +7,7 @@ export interface ReviewState {
     currentFen: string
     bestLineIndex: number
     boardResetVersion: number
+    lastMove?: [Key, Key]
     isPromotion: boolean
     promotionMoveFrom?: string
     promotionMoveTo?: string
@@ -16,6 +18,7 @@ export type ReviewStateAction =
         type: "accept-move"
         currentFen: string
         bestLineIndex: number
+        lastMove: [Key, Key]
     }
     | {
         type: "begin-promotion"
@@ -26,6 +29,7 @@ export type ReviewStateAction =
         type: "end-promotion"
         currentFen: string
         bestLineIndex: number
+        lastMove: [Key, Key]
     }
     | { type: "cancel-promotion" }
     | { type: "go-to-next-puzzle" }
@@ -42,13 +46,15 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                     return {
                         ...state,
                         currentFen: action.currentFen,
-                        bestLineIndex: action.bestLineIndex
+                        bestLineIndex: action.bestLineIndex,
+                        lastMove: action.lastMove
                     }
 
                 case "begin-promotion":
                     return {
                         ...state,
                         boardResetVersion: state.boardResetVersion + 1,
+                        lastMove: undefined,
                         isPromotion: true,
                         promotionMoveFrom: action.promotionMoveFrom,
                         promotionMoveTo: action.promotionMoveTo
@@ -61,13 +67,15 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                         promotionMoveFrom: undefined,
                         promotionMoveTo: undefined,
                         currentFen: action.currentFen,
-                        bestLineIndex: action.bestLineIndex
+                        bestLineIndex: action.bestLineIndex,
+                        lastMove: action.lastMove
                     }
 
                 case "cancel-promotion":
                     return {
                         ...state,
                         boardResetVersion: state.boardResetVersion + 1,
+                        lastMove: undefined,
                         isPromotion: false,
                         promotionMoveFrom: undefined,
                         promotionMoveTo: undefined
@@ -84,6 +92,7 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                         currentPuzzleIndex: nextPuzzleIndex,
                         currentFen: getInitialFen(nextPuzzle),
                         bestLineIndex: 0,
+                        lastMove: undefined,
                         isPromotion: false,
                         promotionMoveFrom: undefined,
                         promotionMoveTo: undefined
@@ -94,6 +103,7 @@ export default function useReviewStateReducer (puzzles: ChessPuzzle[]) {
                     return {
                         ...state,
                         boardResetVersion: state.boardResetVersion + 1,
+                        lastMove: undefined,
                         isPromotion: false,
                         promotionMoveFrom: undefined,
                         promotionMoveTo: undefined
@@ -115,5 +125,6 @@ const createInitialReviewState = (puzzles: ChessPuzzle[]): ReviewState => ({
     currentFen: getInitialFen(puzzles[0]),
     bestLineIndex: 0,
     boardResetVersion: 0,
+    lastMove: undefined,
     isPromotion: false
 })

@@ -13,6 +13,7 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
         currentPuzzle,
         currentFen,
         boardResetVersion,
+        lastMove,
         validMoves,
         currentColor,
         playerColor,
@@ -35,6 +36,7 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
                     currentPuzzle={currentPuzzle}
                     currentFen={currentFen}
                     boardResetVersion={boardResetVersion}
+                    lastMove={lastMove}
                     validMoves={validMoves}
                     currentColor={currentColor}
                     playerColor={playerColor}

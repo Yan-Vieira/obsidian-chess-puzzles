@@ -1,6 +1,7 @@
 import { Chess, Move, PieceSymbol, Square } from "chess.js"
 import { Notice } from "obsidian"
 import { useMemo, useState } from "react"
+import type { Key } from "chessground/types"
 import useValidMoves from "./useValidMoves"
 import useCurrentColor from "./useCurrentColor"
 import useCurrentCheck from "./useCurrentCheck"
@@ -73,7 +74,7 @@ export default function useReviewPuzzle(
 
             chess.move({ from, to })
 
-            acceptPlayerMove(chess)
+            acceptPlayerMove(chess, [from as Key, to as Key])
 
         } catch (error) {
 
@@ -114,7 +115,11 @@ export default function useReviewPuzzle(
                 promotion
             })
 
-            acceptPlayerMove(chess, true)
+            acceptPlayerMove(
+                chess,
+                [reviewState.promotionMoveFrom as Key, reviewState.promotionMoveTo as Key],
+                true
+            )
 
         } catch (error) {
 
@@ -129,13 +134,21 @@ export default function useReviewPuzzle(
         updateReviewState({ type: "cancel-promotion" })
     }
 
-    const acceptPlayerMove = (chessInstance: Chess, isPromotionMove = false) => {
+    const acceptPlayerMove = (
+        chessInstance: Chess,
+        playerMove: [Key, Key],
+        isPromotionMove = false
+    ) => {
 
         let nextBestLineIndex = reviewState.bestLineIndex + 1
+        let lastMove = playerMove
 
-        if (playOpponentMove(chessInstance, currentPuzzle?.bestLine, nextBestLineIndex)) {
+        const opponentMove = playOpponentMove(chessInstance, currentPuzzle?.bestLine, nextBestLineIndex)
+
+        if (opponentMove) {
 
             nextBestLineIndex++
+            lastMove = [opponentMove.from as Key, opponentMove.to as Key]
         }
 
         const actionType = isPromotionMove ? "end-promotion" : "accept-move"
@@ -147,7 +160,8 @@ export default function useReviewPuzzle(
             updateReviewState({
                 type: actionType,
                 currentFen: chessInstance.fen(),
-                bestLineIndex: nextBestLineIndex
+                bestLineIndex: nextBestLineIndex,
+                lastMove
             })
 
             return
@@ -156,7 +170,8 @@ export default function useReviewPuzzle(
         updateReviewState({
             type: actionType,
             currentFen: chessInstance.fen(),
-            bestLineIndex: nextBestLineIndex
+            bestLineIndex: nextBestLineIndex,
+            lastMove
         })
     }
 
@@ -203,6 +218,7 @@ export default function useReviewPuzzle(
         currentPuzzle,
         currentFen: reviewState.currentFen,
         boardResetVersion: reviewState.boardResetVersion,
+        lastMove: reviewState.lastMove,
         validMoves,
         currentColor,
         playerColor,
@@ -270,15 +286,15 @@ const playOpponentMove = (
 
     const opponentMove = bestLine?.[bestLineIndex]
 
-    if (!opponentMove || bestLineIndex % 2 === 0) return false
+    if (!opponentMove || bestLineIndex % 2 === 0) return null
 
     const move = findMove(chessInstance, opponentMove)
 
-    if (!move) return false
+    if (!move) return null
 
     chessInstance.move(move)
 
-    return true
+    return move
 }
 
 const getCandidateMove = (
