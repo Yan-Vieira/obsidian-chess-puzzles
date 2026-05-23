@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react"
 import getChessgroundStyle from "./ChessgroundStyle"
 
 const DEFAULT_BOARD_SIZE = 400
+const CHESSGROUND_SIZE_RATE = 90
 
 export interface BoardProps {
     currentPuzzle?: ChessPuzzle
@@ -102,8 +103,9 @@ export default function Board({
             {`
                 .chess-puzzle-board {
                     position: relative;
-                    width: 100%;
+                    width: ${CHESSGROUND_SIZE_RATE}%;
                     aspect-ratio: 1 / 1;
+                    margin: 0 auto;
                 }
             `}
             {getChessgroundStyle()}

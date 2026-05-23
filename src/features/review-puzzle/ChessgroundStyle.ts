@@ -131,15 +131,16 @@ piece.fading {
   pointer-events: none;
   opacity: 0.8;
   font-family: sans-serif;
-  font-size: 9px;
+  font-size: clamp(7px, 2.4cqw, 10px);
+  line-height: 1;
 }
 
 .cg-wrap coords.ranks {
-  left: 4px;
-  top: -20px;
+  left: 1%;
+  top: -4%;
   flex-flow: column-reverse;
   height: 100%;
-  width: 12px;
+  width: 8%;
 }
 
 .cg-wrap coords.ranks.black {
@@ -147,18 +148,19 @@ piece.fading {
 }
 
 .cg-wrap coords.ranks.left {
-  left: -15px;
+  left: 1%;
   align-items: flex-end;
 }
 
 .cg-wrap coords.files {
-  bottom: -4px;
-  left: 24px;
+  bottom: 1%;
+  left: 5%;
   flex-flow: row;
   width: 100%;
-  height: 16px;
+  height: 8%;
   text-transform: uppercase;
   text-align: center;
+  align-items: flex-end;
 }
 
 .cg-wrap coords.files.black {
@@ -170,7 +172,9 @@ piece.fading {
 }
 
 .cg-wrap coords.ranks coord {
-  transform: translateY(39%);
+  display: flex;
+  align-items: center;
+  transform: none;
 }
 
 /** Colored board squares as an embedded SVG */
