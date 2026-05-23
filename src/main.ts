@@ -16,13 +16,13 @@ export default class ChessPuzzles extends Plugin {
 
 		this.addSettingTab(new ChessPuzzlesSettingTab(this.app, this))
 
-		registerChessPuzzleCodeBlockPostProcessor(this, this.settings)
+		registerChessPuzzleCodeBlockPostProcessor(this, this.settings, () => this.saveSettings())
 
 		this.addCommand({
 			id: "chess-puzzles-review-pending-puzzles",
 			name: "review pending puzzles",
 			callback: () => {
-				this.modal = new ReviewPuzzleModal(this.app, ReviewType.PENDING_PUZZLES, this.settings)
+				this.modal = new ReviewPuzzleModal(this.app, ReviewType.PENDING_PUZZLES, this.settings, () => this.saveSettings())
 				this.modal.open()
 			}
 		})
@@ -31,7 +31,7 @@ export default class ChessPuzzles extends Plugin {
 			id: "chess-puzzles-review-all-puzzles",
 			name: "review all puzzles",
 			callback: () => {
-				this.modal = new ReviewPuzzleModal(this.app, ReviewType.ALL_PUZZLES, this.settings)
+				this.modal = new ReviewPuzzleModal(this.app, ReviewType.ALL_PUZZLES, this.settings, () => this.saveSettings())
 				this.modal.open()
 			}
 		})
@@ -40,7 +40,7 @@ export default class ChessPuzzles extends Plugin {
 			id: "chess-puzzles-select-deck-to-review",
 			name: "select a deck to review",
 			callback: () => {
-				this.modal = new PuzzlesPanelModal(this.app, this.settings)
+				this.modal = new PuzzlesPanelModal(this.app, this.settings, () => this.saveSettings())
 				this.modal.open()
 			}
 		})

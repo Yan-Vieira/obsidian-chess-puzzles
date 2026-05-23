@@ -10,7 +10,10 @@ import { PuzzlesService } from "services/PuzzlesService"
 import toChessgroundColor from "./toChessgroundColor"
 
 export default function useReviewPuzzle(
-    puzzles: ChessPuzzle[], updatePuzzle: (puzzle:ChessPuzzle) => Promise<void>) {
+    puzzles: ChessPuzzle[],
+    updatePuzzle: (puzzle:ChessPuzzle) => Promise<void>,
+    onPuzzleReviewed: () => Promise<void>
+) {
 
     const { reviewState, updateReviewState } = useReviewStateReducer(puzzles)
 
@@ -194,6 +197,8 @@ export default function useReviewPuzzle(
 
                 await updatePuzzle(currentPuzzle)
             }
+
+            await onPuzzleReviewed()
 
             setCurrentPuzzleFinished(false)
 

@@ -5,9 +5,10 @@ import EaseFeedback from "./EaseFeedback"
 export interface ReviewPuzzleProps {
     puzzles: ChessPuzzle[],
     updatePuzzle: (puzzle:ChessPuzzle) => Promise<void>
+    onPuzzleReviewed: () => Promise<void>
 }
 
-export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps) {
+export default function ReviewPuzzle({ puzzles, updatePuzzle, onPuzzleReviewed }:ReviewPuzzleProps) {
 
     const {
         currentPuzzle,
@@ -26,7 +27,7 @@ export default function ReviewPuzzle({ puzzles, updatePuzzle }:ReviewPuzzleProps
         onMove,
         onPromotion,
         cancelPromotion
-    } = useReviewPuzzle(puzzles, updatePuzzle)
+    } = useReviewPuzzle(puzzles, updatePuzzle, onPuzzleReviewed)
 
     return (
         <>

@@ -6,7 +6,8 @@ import { ChessPuzzlesSettings } from "settings"
 
 export function registerChessPuzzleCodeBlockPostProcessor(
     plugin: Plugin,
-    settings: ChessPuzzlesSettings
+    settings: ChessPuzzlesSettings,
+    saveSettings: () => Promise<void>
 ) {
 
     plugin.registerMarkdownCodeBlockProcessor("chess-puzzle", (source, el, ctx) => {
@@ -36,6 +37,7 @@ export function registerChessPuzzleCodeBlockPostProcessor(
                 plugin.app,
                 ReviewType.SINGLE_PUZZLE,
                 settings,
+                saveSettings,
                 undefined,
                 reviewPuzzle
             ).open()

@@ -4,7 +4,11 @@ import { PuzzlesService } from "services/PuzzlesService"
 import { ReviewType } from "types/ReviewType"
 import ReviewPuzzle from "./ReviewPuzzle"
 import ErrorBoundary from "features/error-boundary/ErrorBoundary"
-import { ChessPuzzlesSettings } from "settings"
+import {
+    ChessPuzzlesSettings,
+    getRemainingDailyReviews,
+    recordDailyReview,
+} from "settings"
 
 export default class ReviewPuzzleModal extends Modal {
 
@@ -12,6 +16,7 @@ export default class ReviewPuzzleModal extends Modal {
     puzzlesService:PuzzlesService
     reviewType:ReviewType
     settings:ChessPuzzlesSettings
+    saveSettings: () => Promise<void>
     deck?:PuzzleDeck
     puzzle?:ChessPuzzle
 
@@ -19,6 +24,7 @@ export default class ReviewPuzzleModal extends Modal {
         app:App,
         reviewType:ReviewType,
         settings:ChessPuzzlesSettings,
+        saveSettings: () => Promise<void>,
         deck?:PuzzleDeck,
         puzzle?:ChessPuzzle
     ) {
@@ -28,6 +34,7 @@ export default class ReviewPuzzleModal extends Modal {
         this.puzzlesService = new PuzzlesService(app, settings)
         this.reviewType = reviewType
         this.settings = settings
+        this.saveSettings = saveSettings
         this.deck = deck
         this.puzzle = puzzle
     }
@@ -75,14 +82,18 @@ export default class ReviewPuzzleModal extends Modal {
     private async reviewAllPuzzles() {
 
         const puzzles = await this.puzzlesService.getAllPuzzles()
+        const preparedPuzzles = this.prepareReviewQueue(puzzles)
+
+        if (!this.renderDailyLimitReachedIfNeeded(preparedPuzzles)) return
 
         this.root = createRoot(this.contentEl)
 
         this.root.render(
             <ErrorBoundary>
                 <ReviewPuzzle
-                    puzzles={shufflePuzzles(puzzles)}
+                    puzzles={preparedPuzzles}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                    onPuzzleReviewed={() => this.recordReviewedPuzzle()}
                 />
             </ErrorBoundary>
         )
@@ -91,6 +102,7 @@ export default class ReviewPuzzleModal extends Modal {
     private async reviewPendingPuzzles() {
 
         const puzzles = await this.puzzlesService.getPendingPuzzles()
+        const preparedPuzzles = this.prepareReviewQueue(puzzles)
 
         if (puzzles.length <= 0) {
 
@@ -104,13 +116,16 @@ export default class ReviewPuzzleModal extends Modal {
             return;
         }
 
+        if (!this.renderDailyLimitReachedIfNeeded(preparedPuzzles)) return
+
         this.root = createRoot(this.contentEl)
 
         this.root.render(
             <ErrorBoundary>
                 <ReviewPuzzle
-                    puzzles={shufflePuzzles(puzzles)}
+                    puzzles={preparedPuzzles}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                    onPuzzleReviewed={() => this.recordReviewedPuzzle()}
                 />
             </ErrorBoundary>
         )
@@ -125,13 +140,18 @@ export default class ReviewPuzzleModal extends Modal {
             return
         }
 
+        const preparedPuzzles = this.prepareReviewQueue(this.deck.puzzles)
+
+        if (!this.renderDailyLimitReachedIfNeeded(preparedPuzzles)) return
+
         this.root = createRoot(this.contentEl)
 
         this.root.render(
             <ErrorBoundary>
                 <ReviewPuzzle
-                    puzzles={shufflePuzzles(this.deck.puzzles)}
+                    puzzles={preparedPuzzles}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                    onPuzzleReviewed={() => this.recordReviewedPuzzle()}
                 />
             </ErrorBoundary>
         )
@@ -146,6 +166,13 @@ export default class ReviewPuzzleModal extends Modal {
             return
         }
 
+        if (this.settings.enableDailyReviewLimit && getRemainingDailyReviews(this.settings) <= 0) {
+
+            this.renderDailyLimitReached()
+
+            return
+        }
+
         this.root = createRoot(this.contentEl)
 
         this.root.render(
@@ -153,9 +180,43 @@ export default class ReviewPuzzleModal extends Modal {
                 <ReviewPuzzle
                     puzzles={[this.puzzle]}
                     updatePuzzle={(puzzle) => this.puzzlesService.updateReviewFields(puzzle)}
+                    onPuzzleReviewed={() => this.recordReviewedPuzzle()}
                 />
             </ErrorBoundary>
         )
+    }
+
+    private prepareReviewQueue(puzzles: ChessPuzzle[]) {
+
+        const shuffledPuzzles = shufflePuzzles(puzzles)
+
+        if (!this.settings.enableDailyReviewLimit) return shuffledPuzzles
+
+        return shuffledPuzzles.slice(0, getRemainingDailyReviews(this.settings))
+    }
+
+    private renderDailyLimitReachedIfNeeded(puzzles: ChessPuzzle[]) {
+
+        if (!this.settings.enableDailyReviewLimit) return true
+        if (puzzles.length > 0) return true
+
+        this.renderDailyLimitReached()
+
+        return false
+    }
+
+    private renderDailyLimitReached() {
+
+        this.contentEl.style = "display: flex; flex-direction: column; align-items: center;"
+        this.contentEl.empty()
+        this.contentEl.createEl("p", { text: "You've reached your daily puzzle review limit." })
+        this.contentEl.createEl("p", { text: "You can review more puzzles tomorrow." })
+    }
+
+    private async recordReviewedPuzzle() {
+
+        recordDailyReview(this.settings)
+        await this.saveSettings()
     }
 }
 

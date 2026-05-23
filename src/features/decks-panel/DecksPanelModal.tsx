@@ -12,13 +12,15 @@ export default class DecksPanelModal extends Modal {
 
     puzzlesService:PuzzlesService
     settings:ChessPuzzlesSettings
+    saveSettings: () => Promise<void>
 
-    constructor(app:App, settings:ChessPuzzlesSettings) {
+    constructor(app:App, settings:ChessPuzzlesSettings, saveSettings: () => Promise<void>) {
 
         super(app)
 
         this.puzzlesService = new PuzzlesService(app, settings)
         this.settings = settings
+        this.saveSettings = saveSettings
     }
 
     async onOpen() {
@@ -37,7 +39,13 @@ export default class DecksPanelModal extends Modal {
 
     private goToPuzzleReviewModal(deck:PuzzleDeck) {
 
-        new ReviewPuzzleModal(this.app, ReviewType.SINGLE_DECK, this.settings, deck).open()
+        new ReviewPuzzleModal(
+            this.app,
+            ReviewType.SINGLE_DECK,
+            this.settings,
+            this.saveSettings,
+            deck
+        ).open()
 
         this.close()
     }
